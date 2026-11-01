@@ -1,0 +1,52 @@
+version: '3'
+
+vars:
+  BUILD_DIR: build
+  BUILD_TYPE: '{{.BUILD_TYPE | default "Debug"}}'
+  GENERATOR: Ninja
+
+tasks:
+  default:
+    cmds:
+      - task: build
+
+  configure:
+    desc: Configure the CMake project
+    sources:
+      - CMakeLists.txt
+    generates:
+      - '{{.BUILD_DIR}}/CMakeCache.txt'
+    cmds:
+      - >-
+        cmake -S . -B {{.BUILD_DIR}} -G {{.GENERATOR}}
+        -DCMAKE_BUILD_TYPE={{.BUILD_TYPE}}
+
+  build:
+    desc: Build the project
+    deps: [configure]
+    cmds:
+      - cmake --build {{.BUILD_DIR}}
+      - cmake --build {{.BUILD_DIR}} --target all_verify_interface_header_sets
+
+  run:
+    desc: Build and run src/main.cpp
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/eop_main
+
+  test:
+    desc: Run tests with CTest
+    deps: [build]
+    cmds:
+      - ctest --test-dir {{.BUILD_DIR}} --output-on-failure
+
+  install:
+    desc: 'Install headers (override prefix with PREFIX=...)'
+    deps: [build]
+    cmds:
+      - cmake --install {{.BUILD_DIR}} {{if .PREFIX}}--prefix {{.PREFIX}}{{end}}
+
+  clean:
+    desc: Remove the build directory
+    cmds:
+      - rm -rf {{.BUILD_DIR}}

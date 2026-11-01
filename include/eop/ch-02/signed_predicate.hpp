@@ -1,30 +1,25 @@
 #ifndef EOP_CH2_SIGNED_PREDICATE_HPP
 #define EOP_CH2_SIGNED_PREDICATE_HPP
 
-#include <cstdint>
-#include <iostream>
+#include <concepts>
 #include <limits>
 
-template <typename T> struct is_signed_32_bit_integer {
-  static const bool value = std::is_same<T, int32_t>::value;
-};
+namespace eop {
 
-// Predicate to check for overflow in addition of signed 32-bit integers
-template <typename T> struct can_add_without_overflow {
-  static_assert(is_signed_32_bit_integer<T>::value, "Type must be int32_t");
-  static bool check(int32_t a, int32_t b) {
-    // Check for overflow:
-    // If both numbers are positive and their sum is negative, overflow
-    // occurred. If both numbers are negative and their sum is positive,
-    // overflow occurred.
-    if ((b > 0) && (a > std::numeric_limits<int32_t>::max() - b)) {
-      return false; // Overflow
-    }
-    if ((b < 0) && (a < std::numeric_limits<int32_t>::min() - b)) {
-      return false; // Underflow
-    }
-    return true; // No overflow
-  }
-};
+// True when a + b is representable in T.
+//
+// Signed overflow is undefined behaviour, so we cannot compute a + b and then
+// inspect the result. Instead compare against the bound on the side b moves
+// toward; neither max - b (for b > 0) nor min - b (for b < 0) can overflow.
+template <std::signed_integral T>
+constexpr bool can_add_without_overflow(T a, T b) noexcept {
+  if (b > 0)
+    return a <= std::numeric_limits<T>::max() - b;
+  if (b < 0)
+    return a >= std::numeric_limits<T>::min() - b;
+  return true;
+}
+
+} // namespace eop
 
 #endif // !EOP_CH2_SIGNED_PREDICATE_HPP

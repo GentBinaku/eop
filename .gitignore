@@ -42,3 +42,6 @@ CPackSourceConfig.cmake
 DartConfiguration.tcl
 Makefile
 compile_commands.json
+
+# go-task checksum cache
+.task/

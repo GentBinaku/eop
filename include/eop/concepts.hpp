@@ -203,20 +203,46 @@ template <functional_procedure F> struct output {};
 #define n_ary_predicate typename
 
 /**
+ * @brief Distance type of a transformation
+ *
+ * DistanceType(F) is an integer type large enough to count the steps
+ * between any x and f^n(x). A k-bit domain can have an orbit of 2^k values,
+ * so the default is the same-width unsigned type. A function object may
+ * override it with a nested `distance_type`.
+ */
+template <class _Tp> struct domain_distance {};
+template <std::integral _Tp>
+  requires(!std::same_as<_Tp, bool>)
+struct domain_distance<_Tp> {
+  using type = std::make_unsigned_t<_Tp>;
+};
+
+template <class F, class _Tp> struct distance {
+  using type = typename domain_distance<_Tp>::type;
+};
+template <class F, class _Tp>
+  requires requires { typename F::distance_type; }
+struct distance<F, _Tp> {
+  using type = typename F::distance_type;
+};
+
+template <class F, class _Tp>
+using distance_type = typename distance<F, _Tp>::type;
+
+/**
  * @brief Concept for transformations
  *
- * transformation = n_ary_operation
- * || n_ary_predicate
+ * transformation = functional_procedure && unary_function
+ * && codomain = domain && distance_type exists
  *
+ * C++ cannot deduce Domain(F) from a generic callable, so the
+ * domain is passed explicitly as _Tp.
  */
-#define transformation typename
-template <transformation F> struct distance {};
-template <> struct distance<int> {
-  using type = unsigned int;
-};
-template <> struct distance<long long> {
-  using type = unsigned long long;
-};
+template <class F, class _Tp>
+concept transformation =
+    std::regular_invocable<F, _Tp> &&
+    std::same_as<std::invoke_result_t<F, _Tp>, _Tp> &&
+    std::integral<distance_type<F, _Tp>>;
 
 /**
  * @brief Concept for types on which
@@ -256,8 +282,6 @@ using input_type = typename input<F, I>::type;
 template <functional_procedure F> using domain = input_type<F, 0>;
 
 template <functional_procedure F> using codomain = typename output<F>::type;
-
-template <transformation F> using distance_type = typename distance<F>::type;
 
 template <iterator I>
 using iterator_value_type = typename std::iterator_traits<I>::value_type;
