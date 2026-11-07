@@ -2,6 +2,9 @@
 #define EOP_CONCEPTS_HPP
 
 #include "precomp.hpp"
+#include <concepts>
+#include <cstddef>
+#include <type_traits>
 
 namespace eop {
 /**
@@ -196,38 +199,10 @@ template <functional_procedure F> struct output {};
 #define nullary_operation typename
 #define nullary_predicate typename
 #define unary_operation typename
-#define unary_predicate typename
 #define binary_operation typename
 #define binary_predicate typename
 #define n_ary_operation typename
 #define n_ary_predicate typename
-
-/**
- * @brief Distance type of a transformation
- *
- * DistanceType(F) is an integer type large enough to count the steps
- * between any x and f^n(x). A k-bit domain can have an orbit of 2^k values,
- * so the default is the same-width unsigned type. A function object may
- * override it with a nested `distance_type`.
- */
-template <class _Tp> struct domain_distance {};
-template <std::integral _Tp>
-  requires(!std::same_as<_Tp, bool>)
-struct domain_distance<_Tp> {
-  using type = std::make_unsigned_t<_Tp>;
-};
-
-template <class F, class _Tp> struct distance {
-  using type = typename domain_distance<_Tp>::type;
-};
-template <class F, class _Tp>
-  requires requires { typename F::distance_type; }
-struct distance<F, _Tp> {
-  using type = typename F::distance_type;
-};
-
-template <class F, class _Tp>
-using distance_type = typename distance<F, _Tp>::type;
 
 /**
  * @brief Concept for transformations
@@ -239,10 +214,36 @@ using distance_type = typename distance<F, _Tp>::type;
  * domain is passed explicitly as _Tp.
  */
 template <class F, class _Tp>
-concept transformation =
-    std::regular_invocable<F, _Tp> &&
-    std::same_as<std::invoke_result_t<F, _Tp>, _Tp> &&
-    std::integral<distance_type<F, _Tp>>;
+concept transformation = std::regular_invocable<F, _Tp> &&
+                         std::same_as<std::invoke_result_t<F, _Tp>, _Tp>;
+
+template <typename F, typename T>
+concept unary_predicate = std::regular_invocable<F, T> &&
+                          std::same_as<std::invoke_result_t<F, T>, bool>;
+
+template <class F, class T>
+  requires eop::transformation<F, T> && std::integral<T>
+using distance_type = std::make_unsigned_t<T>;
+
+template <typename _Fp, typename _Tp, std::integral N = std::ptrdiff_t>
+  requires eop::transformation<_Fp, _Tp>
+N distance(_Tp x, _Tp y, _Fp f) {
+  N n(0);
+  while (x != y) {
+    x = f(x);
+    n = n + N(1);
+  }
+  return n;
+}
+
+/**
+ * @brief Distance type of a transformation
+ *
+ * DistanceType(F) is an integer type large enough to count the steps
+ * between any x and f^n(x). A k-bit domain can have an orbit of 2^k values,
+ * so the default is the same-width unsigned type. A function object may
+ * override it with a nested `distance_type`.
+ */
 
 /**
  * @brief Concept for types on which
