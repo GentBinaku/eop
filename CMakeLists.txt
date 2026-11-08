@@ -31,6 +31,10 @@ install(TARGETS eop EXPORT eopTargets FILE_SET HEADERS)
 add_executable(eop_main src/main.cpp)
 target_link_libraries(eop_main PRIVATE eop::eop)
 
+if(BUILD_TESTING)
+  add_subdirectory(tests)
+endif()
+
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)

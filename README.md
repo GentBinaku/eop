@@ -21,7 +21,8 @@ include/eop/
   ch-02/transformation.hpp                    Ch. 2  Transformations and their orbits
   ch-02/signed_predicate.hpp
   ch-02/collision_point.hpp
-src/main.cpp                                  scratch tests exercising the library
+tests/                                        GoogleTest tests, one file per header
+src/main.cpp                                  scratch program
 ```
 
 The library is header-only and exported as the CMake target `eop::eop`.
@@ -39,14 +40,15 @@ The library is header-only and exported as the CMake target `eop::eop`.
 Requires CMake 4.0+ and a compiler with C++26 support.
 
 ```sh
-cmake -B build -DCMAKE_BUILD_TYPE=Debug
+cmake -B build
 cmake --build build
-./build/eop_main
+ctest --test-dir build
 ```
 
-The tests in `src/main.cpp` are plain `assert`s. Release builds define
-`NDEBUG`, which compiles them out, so build in Debug to run them. A silent
-exit means every test passed.
+Tests use GoogleTest and live in `tests/`, mirroring `include/eop/`
+(`tests/ch-02/collision_point_test.cpp` tests `ch-02/collision_point.hpp`).
+Any file named `*_test.cpp` under `tests/` is picked up automatically. CMake
+uses an installed GoogleTest if it finds one and downloads it otherwise.
 
 To check that each header compiles on its own (that it includes everything it
 needs), build the verification target:

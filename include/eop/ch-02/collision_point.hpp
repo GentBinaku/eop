@@ -34,5 +34,19 @@ template <typename F, typename P, typename T>
 bool terminating(const T &x, F f, P p) {
   return !p(collision_point(x, f, p));
 }
+
+template <typename F, typename T>
+  requires eop::transformation<F, T>
+T &collision_point_nonterminating_orbit(const T &x, F f) {
+  T slow = x;
+  T fast = f(x);
+
+  while (fast != slow) {
+    slow = f(slow);
+    fast = f(fast);
+    fast = f(fast);
+  }
+  return fast;
+}
 } // namespace eop
 #endif // !EOP_CH2_COLLISION_POINT_HPP

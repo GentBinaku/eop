@@ -7,17 +7,26 @@
 #include <type_traits>
 
 namespace eop {
+/*
+ * Requirements the book names but that are not checked here yet are
+ * declared as concepts that always hold (`concept X = true`). Writing
+ * `template <regular T>` documents the requirement exactly as the book
+ * does. These are real names in namespace eop, not macros, so they cannot
+ * clash with std (e.g. std::iterator, std::regular). Replace `true` with
+ * a real definition as each requirement gets implemented.
+ */
+
 /**
  * @brief Primitive semantic requirements for
  * type construction, destruction, and assignment
  *
  */
-#define constructible typename
-#define destructible typename
-#define copy_constructible typename
-#define copy_assignable typename
-#define move_constructible typename
-#define move_assignable typename
+template <class _Tp> concept constructible = true;
+template <class _Tp> concept destructible = true;
+template <class _Tp> concept copy_constructible = true;
+template <class _Tp> concept copy_assignable = true;
+template <class _Tp> concept move_constructible = true;
+template <class _Tp> concept move_assignable = true;
 
 /**
  * @brief Concept for an object type of
@@ -26,7 +35,7 @@ namespace eop {
  * partially_formed = move_assignable + destructible
  *
  */
-#define partially_formed typename
+template <class _Tp> concept partially_formed = true;
 template <class _Tp>
 inline constexpr bool is_partially_formed_v =
     std::is_move_assignable_v<_Tp> && std::is_destructible_v<_Tp>;
@@ -38,7 +47,7 @@ inline constexpr bool is_partially_formed_v =
  * well_formed = partially_formed + ...
  *
  */
-#define well_formed typename
+template <class _Tp> concept well_formed = true;
 
 /**
  * @brief Naive implementation for nothrow
@@ -90,7 +99,7 @@ inline constexpr bool linear_unusable_as_v =
  * std::unique_ptr<T> leads to undefined run-time behavior.
  *
  */
-#define linear typename
+template <class _Tp> concept linear = true;
 template <class _Tp>
 inline constexpr bool is_linear_v =
     std::is_nothrow_destructible_v<_Tp> && eop::linear_usable_as_v<_Tp, _Tp> &&
@@ -136,7 +145,7 @@ public:
  * move_constructible && move_assignable
  *
  */
-#define semiregular typename
+template <class _Tp> concept semiregular = true;
 template <class _Tp>
 inline constexpr bool is_semiregular_v =
     std::is_default_constructible_v<_Tp> && std::is_destructible_v<_Tp> &&
@@ -149,7 +158,7 @@ inline constexpr bool is_semiregular_v =
  * equality comparability semantic
  *
  */
-#define equality_comparable typename
+template <class _Tp> concept equality_comparable = true;
 template <class _Tp, class = void>
 struct is_equality_comparable : std::false_type {};
 template <class _Tp>
@@ -169,7 +178,7 @@ inline constexpr bool is_equality_comparable_v =
  * regular = semiregular && equality
  *
  */
-#define regular typename
+template <class _Tp> concept regular = true;
 template <class _Tp>
 inline constexpr bool is_regular_v =
     eop::is_semiregular_v<_Tp> && eop::is_equality_comparable_v<_Tp>;
@@ -179,7 +188,7 @@ inline constexpr bool is_regular_v =
  * their input and output objects
  *
  */
-#define functional_procedure typename
+template <class _Tp> concept functional_procedure = true;
 template <functional_procedure F, const unsigned I> struct input {};
 
 template <functional_procedure F> struct output {};
@@ -196,13 +205,13 @@ template <functional_procedure F> struct output {};
  * && codomain(functional_procedure) =
  *
  */
-#define nullary_operation typename
-#define nullary_predicate typename
-#define unary_operation typename
-#define binary_operation typename
-#define binary_predicate typename
-#define n_ary_operation typename
-#define n_ary_predicate typename
+template <class _Tp> concept nullary_operation = true;
+template <class _Tp> concept nullary_predicate = true;
+template <class _Tp> concept unary_operation = true;
+template <class _Tp> concept binary_operation = true;
+template <class _Tp> concept binary_predicate = true;
+template <class _Tp> concept n_ary_operation = true;
+template <class _Tp> concept n_ary_predicate = true;
 
 /**
  * @brief Concept for transformations
@@ -250,21 +259,21 @@ N distance(_Tp x, _Tp y, _Fp f) {
  * arithmetic can be performed
  *
  */
-#define arithmetic typename
+template <class _Tp> concept arithmetic = true;
 
 /**
  * @brief Models for data structures,
  * iterators, and containers
  *
  */
-#define container typename
-#define linear_structure typename
-#define coordinate_structure typename
-#define iterator typename
-#define forward_iterator typename
-#define reverse_iterator typename
-#define bidirectional_iterator typename
-#define random_access_iterator typename
+template <class _Tp> concept container = true;
+template <class _Tp> concept linear_structure = true;
+template <class _Tp> concept coordinate_structure = true;
+template <class _Tp> concept iterator = true;
+template <class _Tp> concept forward_iterator = true;
+template <class _Tp> concept reverse_iterator = true;
+template <class _Tp> concept bidirectional_iterator = true;
+template <class _Tp> concept random_access_iterator = true;
 
 /**
  * @brief Aliases for types
