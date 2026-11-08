@@ -37,7 +37,7 @@ bool terminating(const T &x, F f, P p) {
 
 template <typename F, typename T>
   requires eop::transformation<F, T>
-T &collision_point_nonterminating_orbit(const T &x, F f) {
+T collision_point_nonterminating_orbit(const T &x, F f) {
   T slow = x;
   T fast = f(x);
 
@@ -48,5 +48,19 @@ T &collision_point_nonterminating_orbit(const T &x, F f) {
   }
   return fast;
 }
+
+template <typename F, typename T>
+  requires eop::transformation<F, T>
+bool circular_nonterminating_orbit(T const &x, F f) {
+  return x == f(collision_point_nonterminating_orbit(x, f));
+}
+
+template <typename F, typename T, typename P>
+  requires eop::transformation<F, T> && std::predicate<P &, const T &>
+bool circular(T const &x, F f, P p) {
+  T y = collision_point(x, f, p);
+  return p(y) && x == f(y);
+}
+
 } // namespace eop
 #endif // !EOP_CH2_COLLISION_POINT_HPP
