@@ -29,10 +29,29 @@ int main() {
   }
   // cycle
   {
-
     auto IV = std::int32_t{0};
     auto succ = [&](std::int32_t x) { return x + 1; };
     auto predicate = [&](std::int32_t x) { return x == IV; };
     assert(eop::collision_point(IV, succ, predicate) == IV + 1);
+
+    // Terminating orbit: f defined only for x < 10, so the walk stops at 10.
+    auto succ_term = [](std::int32_t x) { return x + 1; };
+    auto below10 = [](std::int32_t x) { return x < 10; };
+    assert(eop::terminating(IV, succ_term, below10) == true);
+
+    // f is total on the orbits below, so the definition-space predicate is
+    // always true; only f decides whether the orbit cycles.
+    auto always = [](std::int32_t) { return true; };
+
+    // Circular orbit: 0 -> 1 -> ... -> 9 -> 0  (handle h = 0, cycle c = 10).
+    // With h = 0 the collision point is f^(c-1)(x), the element before x.
+    auto succ_cycle = [](std::int32_t x) { return (x + 1) % 10; };
+    assert(eop::collision_point(IV, succ_cycle, always) == 9);
+
+    // Rho-shaped orbit: 0 -> 1 -> 2 -> [3 -> 4 -> 5 -> 6 -> 3]
+    // (handle h = 3, cycle c = 4). slow = f^n(x), fast = f^(2n+1)(x);
+    // they meet at n = 3, the cycle's entry point.
+    auto rho = [](std::int32_t x) { return x < 6 ? x + 1 : 3; };
+    assert(eop::collision_point(IV, rho, always) == 3);
   }
 }

@@ -28,5 +28,11 @@ T collision_point(const T &x, F f, P p) {
   }
   return fast;
 }
+
+template <typename F, typename P, typename T>
+  requires eop::transformation<F, T> && std::predicate<P &, const T &>
+bool terminating(const T &x, F f, P p) {
+  return !p(collision_point(x, f, p));
+}
 } // namespace eop
 #endif // !EOP_CH2_COLLISION_POINT_HPP

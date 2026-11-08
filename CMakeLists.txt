@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(eop INTERFACE)
 add_library(eop::eop ALIAS eop)
 
-target_compile_features(eop INTERFACE cxx_std_23)
+target_compile_features(eop INTERFACE cxx_std_26)
 target_include_directories(eop INTERFACE
                            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
