@@ -108,3 +108,48 @@ TEST(Circular, AgreesWithNonterminatingVersion) {
         << "x = " << x;
   }
 }
+
+// Exercise 2.2
+
+TEST(OrbitIntersection, SameStartingPoint) {
+  EXPECT_TRUE(eop::orbit_intersection(6, 6, long_rho, always));
+}
+
+TEST(OrbitIntersection, SameRhoOrbitDifferentCollisionPoints) {
+  // collision points are 7 and 5, but the cycle {5,6,7,8} is shared.
+  EXPECT_TRUE(eop::orbit_intersection(0, 6, long_rho, always));
+  EXPECT_TRUE(eop::orbit_intersection(0, 3, long_rho, always));
+}
+
+TEST(OrbitIntersection, SeparateCycles) {
+  auto plus2 = [](std::int32_t x) { return (x + 2) % 10; };
+  EXPECT_FALSE(eop::orbit_intersection(0, 1, plus2, always)); // evens vs odds
+  EXPECT_TRUE(eop::orbit_intersection(0, 4, plus2, always));
+}
+
+TEST(OrbitIntersection, TerminatingSameEnd) {
+  EXPECT_TRUE(eop::orbit_intersection(0, 5, succ, below10)); // both end at 10
+}
+
+TEST(OrbitIntersection, TerminatingDifferentEnds) {
+  // f(x) = x + 2 defined for x < 10: evens end at 10, odds end at 11.
+  auto plus2 = [](std::int32_t x) { return x + 2; };
+  EXPECT_FALSE(eop::orbit_intersection(0, 1, plus2, below10));
+}
+
+TEST(OrbitIntersection, DifferentShapes) {
+  // f(x) = x + 1 below 10, stays cyclic among 20..29 otherwise.
+  auto mixed = [](std::int32_t x) {
+    return x >= 20 ? 20 + (x - 19) % 10 : x + 1;
+  };
+  auto defined = [](std::int32_t x) { return x < 10 || x >= 20; };
+  EXPECT_FALSE(eop::orbit_intersection(0, 20, mixed, defined));
+  EXPECT_FALSE(eop::orbit_intersection(20, 0, mixed, defined));
+}
+
+TEST(ConnectionPoint, RhoAndCircular) {
+  EXPECT_EQ(eop::connection_point(0, long_rho, always), 5);
+  EXPECT_EQ(eop::connection_point(0, rho, always), 3);
+  EXPECT_EQ(eop::connection_point(6, long_rho, always), 6); // h = 0
+  EXPECT_EQ(eop::connection_point_non_terminating_orbit(0, long_rho), 5);
+}
