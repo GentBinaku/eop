@@ -153,3 +153,76 @@ TEST(ConnectionPoint, RhoAndCircular) {
   EXPECT_EQ(eop::connection_point(6, long_rho, always), 6); // h = 0
   EXPECT_EQ(eop::connection_point_non_terminating_orbit(0, long_rho), 5);
 }
+
+// Exercise 2.3
+
+namespace {
+// Two handles merging into one chain that ends at 10:
+//   0 -> 1 -> 2 -> 3 -> ... -> 10 (end)
+//  20 -> 21 -> 22 -^   (22 joins at 3)
+constexpr auto merge = [](std::int32_t x) { return x == 22 ? 3 : x + 1; };
+} // namespace
+
+TEST(ConvergentPointGuarded, SameDistanceMatchesConvergentPoint) {
+  // 0 and 20 are both 10 steps from 10: plain convergent_point works too.
+  EXPECT_EQ(eop::convergent_point_guarded(0, 20, 10, merge), 3);
+  EXPECT_EQ(eop::convergent_point(0, 20, merge), 3);
+}
+
+TEST(ConvergentPointGuarded, DifferentDistancesFindMergePoint) {
+  // 0 is 10 steps from 10, 21 is 9: plain convergent_point would never meet.
+  EXPECT_EQ(eop::convergent_point_guarded(0, 21, 10, merge), 3);
+  EXPECT_EQ(eop::convergent_point_guarded(21, 0, 10, merge), 3);
+}
+
+TEST(ConvergentPointGuarded, OneOrbitContainsTheOther) {
+  // 5 is on 0's orbit, so they come together at 5.
+  EXPECT_EQ(eop::convergent_point_guarded(0, 5, 10, succ), 5);
+}
+
+TEST(ConvergentPointGuarded, PointsOnSameCycle) {
+  // convergent_point(4, 6, long_rho) loops forever; guarded terminates.
+  // In a cycle every element is common, so the answer depends on y.
+  EXPECT_EQ(eop::convergent_point_guarded(4, 6, 5, long_rho), 5);
+  EXPECT_EQ(eop::convergent_point_guarded(4, 6, 7, long_rho), 6);
+}
+
+// Section 2.5: orbit_structure returns (m0, m1, m3):
+//   terminating: (h - 1, 0,     terminal element)
+//   circular:    (0,     c - 1, x)
+//   rho-shaped:  (h,     c - 1, connection point)
+
+TEST(OrbitStructure, Terminating) {
+  // 0 -> ... -> 10 (end): h = 11, so m0 = 10.
+  auto s = eop::orbit_structure(x0, succ, below10);
+  EXPECT_EQ(s.m0, 10u);
+  EXPECT_EQ(s.m1, 0u);
+  EXPECT_EQ(s.m3, 10);
+}
+
+TEST(OrbitStructure, Circular) {
+  // [0 -> ... -> 9 -> 0]: h = 0, c = 10.
+  auto s = eop::orbit_structure(x0, mod10, always);
+  EXPECT_EQ(s.m0, 0u);
+  EXPECT_EQ(s.m1, 9u);
+  EXPECT_EQ(s.m3, 0);
+}
+
+TEST(OrbitStructure, RhoShaped) {
+  // 0..4 -> [5 -> 6 -> 7 -> 8]: h = 5, c = 4.
+  auto s = eop::orbit_structure(x0, long_rho, always);
+  EXPECT_EQ(s.m0, 5u);
+  EXPECT_EQ(s.m1, 3u);
+  EXPECT_EQ(s.m3, 5);
+}
+
+TEST(OrbitStructureNonterminatingOrbit, MatchesOrbitStructure) {
+  for (auto f : {+[](std::int32_t x) { return (x + 1) % 10; },
+                 +[](std::int32_t x) { return x < 8 ? x + 1 : 5; }}) {
+    auto a = eop::orbit_structure_nonterminating_orbit(x0, f);
+    auto b = eop::orbit_structure(x0, f, always);
+    EXPECT_EQ(a.m0, b.m0);
+    EXPECT_EQ(a.m1, b.m1);
+    EXPECT_EQ(a.m3, b.m3);
+  }
+}
