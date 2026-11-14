@@ -225,14 +225,15 @@ concept nullary_predicate = true;
 template <class _Tp>
 concept unary_operation = true;
 template <class _Tp>
-concept binary_operation = true;
-template <class _Tp>
 concept binary_predicate = true;
 template <class _Tp>
 concept n_ary_operation = true;
 template <class _Tp>
 concept n_ary_predicate = true;
 
+
+template<typename Op, typename Arg1, typename Arg2>
+concept binary_operation = std::is_invocable_v<Op, Arg1, Arg2>;
 /**
  * @brief Concept for transformations
  *
